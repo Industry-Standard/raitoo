@@ -369,11 +369,12 @@
 		async: true,
 		async walkTokens(token) {
 			if (token.type === 'include') {
+				url = token.url
 				token.url = cwd + cleanPath(token.url)
 				try{
 					token.html = await renderMD(token.url)
 				} catch (err) {
-					token.html = `<span class="include-error"><em>Warning!</em> Resource ${token.url} not found!</span>`;
+					token.html = `<span class="include-error"><em>Warning!</em> Resource ${url} not found!</span>`;
 				}
 			}
 		}
