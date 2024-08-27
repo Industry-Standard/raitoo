@@ -378,26 +378,10 @@
 			}
 		}
 	});
-	const checkLocalResourceExists = async (path) => {
-		try {
-			//if (path.slice(-3) == ".md" || path.slice(-6) == "README") return false;
-			if (path.slice(-1) == "/") { 
-				path = window.location.host+path;
-			} 
-			console.log(`checking [${config.contentPath}${path}]`);
-			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});	
-			console.log(res.status+" is 200? " + res.status == 200);	
-			return res.status == 200
-		} catch(ex) {
-			console.log('resource check exception: ' + ex);
-		}
-		return false;
-	}
 
 	const renderMD = async (path) => {
 		if (path.indexOf("#") != -1) path = path.substr(0, path.lastIndexOf("#"));
 		if (path.slice(-1) == "/" || path == "") path += "README";
-		console.log("prefetch: " + path);
 		const res = await fetch(`${config.contentPath}${path}.md`);
 		if (res.status != 200) throw Error();
 		const markdown = await res.text();
