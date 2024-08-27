@@ -48,6 +48,11 @@ test("Include", async ({ page, prefix, baseUrl }) => {
 	await expect(page.getByText("This is an include !")).toBeVisible();
 });
 
+test("Bad Include", async ({ page, prefix, baseUrl }) => {
+	await page.goto(baseUrl + "/docs/");
+	await expect(page.getByText("Resource include2.md not found!")).toBeVisible();
+});
+
 test("History", async ({ page, prefix, baseUrl }) => {
 	await page.goto(baseUrl + "/");
 	await isHomePage({ page, prefix, baseUrl });
