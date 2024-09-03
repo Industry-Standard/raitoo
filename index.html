@@ -14,6 +14,8 @@
 		sitePath: "/",
 		browserRouter: false,
 		name: "Raito",
+		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
+		fileExtension: ".md", //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
 		components: ["docs/navbar", "docs/github"],
 		footers: ["docs/footer"],
 	};
@@ -317,6 +319,12 @@
 	<div id="footer"></div>
 </body>
 <script>
+	/* in general, raito does a few BIG things:
+		- provide a stub index.html that fetches markdown files and embeds them into the html body of index.html
+		- modifies the event handler for <a href> tags 
+		- rewrites url paths (cleanPath) on local servers to work with a pseudo local directory
+	*/
+
 	const markedProps = {};
 	if (typeof hljs !== "undefined")
 		markedProps.highlight = (code) => hljs.highlightAuto(code).value;
@@ -397,6 +405,22 @@
 		div.innerHTML = html;
 		div.id = element.replaceAll("/", "-");
 		componentsDiv.prepend(div);
+	};
+
+	const standardizePath = (path) => {
+		/* paths can be:
+			- remote absolute: https://www.youtube.com/ (doesn't match site identifier)
+			- remote absolute anchor: https://www.youtube.com/sample#in-the-doorway)
+			- local absolute: /dir/mdfile (goes to https://www.yourhost.com/dir/mdfile.md)
+			- local relative: dir/mdfile (goes to https://www.yourhost.com/$currentPath/dir/mdfile.md)
+			- local relative anchor: dir/mdfile#section-1 (goes to https://www.yourhost.com/dir/mdfile.md#section-1)
+
+		   Other than anchors, it's probably easiest to just 'convet' the local directory to an absolute directory and update the 
+		   current working directory (CWD) as a variable for future local relative hrefs. 
+
+		   Also, I think include processing needs to be done as if the CWD is the path to the include, but not 
+		   change it once the markdown for the include has been validated. 
+		*/
 	};
 
 	const cleanPath = (path) => {
