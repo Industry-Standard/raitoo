@@ -8,6 +8,16 @@
 	<link rel="icon" href="docs/logo.svg">
 </head>
 
+
+<!-- Marked.js - Markdown renderer -->
+<script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+
+<!-- OPTIONAL : Highlight.js - Syntax Highlighting -->
+<!--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/base16/solarized-dark.min.css">
+-->
+
 <!-- USER CONFIG -->
 <script>
 	const config = {
@@ -93,18 +103,7 @@
 		color: white;
 		text-decoration: underline;
 	}
-</style>
 
-<!-- Marked.js - Markdown renderer -->
-<script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
-
-<!-- OPTIONAL : Highlight.js - Syntax Highlighting -->
-<!--
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/base16/solarized-dark.min.css">
--->
-
-<style>
 	:root {
 		--text-color: #313f47;
 		--border-color: #dddddd;
@@ -318,6 +317,7 @@
 	<div id="content"></div>
 	<div id="footer"></div>
 </body>
+
 <script>
 	/* in general, raito does a few BIG things:
 		- provide a stub index.html that fetches markdown files and embeds them into the html body of index.html
