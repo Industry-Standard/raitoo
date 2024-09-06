@@ -22,7 +22,7 @@
 <script>
 	const config = {
 		sitePath: "/",
-		browserRouter: false,
+		browserRouter: true,
 		name: "Raito",
 		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
 		fileExtension: ".md", //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
@@ -338,14 +338,15 @@
 
 
 	function fixLocalPath(path, skipRebase) {
+		console.log("in\t",config.sitePath, cwd, path, skipRebase);
 		if(path.startsWith("/")) {
-			if (skipRebase) {
+			if (skipRebase && !config.browserRouter) {
 				path = cleanPath(path.slice(1));
 			} else {
 				path = cleanPath(config.sitePath + path.slice(1));
 			}
 		} else {
-			if (skipRebase) {
+			if (skipRebase &&  !config.browserRouter) {
 				path = cleanPath(cwd + path);
 			} else {
 				path = cleanPath(config.sitePath + cwd + path);
@@ -366,6 +367,7 @@
 			}, [])
 			.join("/");
 		if (path == "") path = "/";
+		console.log("out\t",config.sitePath, cwd, path, skipRebase);
 		return path;
 	}
 
