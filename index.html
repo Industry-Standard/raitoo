@@ -398,30 +398,16 @@
 		return marked.parse(markdown, markedProps);
 	};
 
-	const loadComponent = async (element) => {
+	const loadComponent = async (element, destDiv) => {
 		const html = await renderMD(element);
 		if (!html) return;
 		let div = document.createElement("div");
 		div.innerHTML = html;
 		div.id = element.replaceAll("/", "-");
-		componentsDiv.prepend(div);
+		destDiv.prepend(div);
 	};
 
-	const standardizePath = (path) => {
-		/* paths can be:
-			- remote absolute: https://www.youtube.com/ (doesn't match site identifier)
-			- remote absolute anchor: https://www.youtube.com/sample#in-the-doorway)
-			- local absolute: /dir/mdfile (goes to https://www.yourhost.com/dir/mdfile.md)
-			- local relative: dir/mdfile (goes to https://www.yourhost.com/$currentPath/dir/mdfile.md)
-			- local relative anchor: dir/mdfile#section-1 (goes to https://www.yourhost.com/dir/mdfile.md#section-1)
 
-		   Other than anchors, it's probably easiest to just 'convet' the local directory to an absolute directory and update the 
-		   current working directory (CWD) as a variable for future local relative hrefs. 
-
-		   Also, I think include processing needs to be done as if the CWD is the path to the include, but not 
-		   change it once the markdown for the include has been validated. 
-		*/
-	};
 
 	const cleanPath = (path) => {
 		if (path.slice(-3) == ".md") path = path.slice(0, -3);
@@ -471,19 +457,10 @@
 		}
 	};
 
-	const loadFooter = async (element) => {
-		const html = await renderMD(element);
-		if (!html) return;
-		let div = document.createElement("div");
-		div.innerHTML = html;
-		div.id = element.replaceAll("/", "-");
-		footersDiv.prepend(div);
-	};
-
 	window.onload = async () => {
-		await Promise.all((config.components || []).map((component) => loadComponent(component)));
+		await Promise.all((config.components || []).map((component) => loadComponent(component, componentsDiv)));
 		await loadContent();
-		await Promise.all((config.footers || []).map((footer) => loadFooter(footer)));
+		await Promise.all((config.footers || []).map((footer) => loadComponent(footer, footersDiv)));
 	};
 	window.onhashchange = loadContent;
 	if (config.browserRouter) window.onpopstate = loadContent;
