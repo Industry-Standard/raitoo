@@ -24,6 +24,7 @@
 		sitePath: "/",
 		browserRouter: true,
 		name: "Raito",
+		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
 		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
 		fileExtension: ".md", //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
 		components: ["docs/navbar", "docs/github"],
@@ -414,9 +415,39 @@
 		}
 	});
 
+	const checkLocalResourceExists = async (path) => {
+		//https://stackoverflow.com/questions/1979915/can-i-check-if-a-file-exists-at-a-url
+		try {
+			console.log('checking ' + path);
+			console.log(path.slice(3));
+			console.log(path.slice(6));
+			if (path.slice(-3) == ".md" || path.slice(-6) == "README") return false;
+			if (path.slice(-1) == "/") { 
+				path = window.location.host+path;
+			} 
+			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});		
+			return res.status == 200
+		} catch(ex) {
+			console.log('resource check exception: ' + ex);
+		}
+		return false;
+	}
+
 	const renderMD = async (path) => {
 		if (path.indexOf("#") != -1) path = path.substr(0, path.lastIndexOf("#"));
 		if (path.slice(-1) == "/" || path == "") path += "README";
+
+		// check if resource exists as is - without MD
+		if (config.serveLocalNonMdContent) {
+			if (await checkLocalResourceExists(path)) {
+				console.log('found true! on '+path);
+				window.location.replace(`${config.contentPath}${path}`);
+				return;
+				//https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
+				//https://stackoverflow.com/questions/1368264/how-to-extract-the-hostname-portion-of-a-url-in-javascript
+			}
+		}
+		// resource doesn't exist, fetch the markdown
 		const res = await fetch(`${config.contentPath}${path}.md`);
 		if (res.status != 200) throw Error();
 		const markdown = await res.text();
