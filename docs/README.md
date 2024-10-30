@@ -13,6 +13,17 @@ Root paths redirect to `README.md`.
 └── index.html
 ```
 
+## Images
+
+```
+![garbage fire](media/garbage-fire.jpg)
+```
+
+![garbage fire](media/garbage-fire.jpg)
+
+
+
+
 ## Browser Router
 Recommended to improve SEO and user experience.
 
@@ -54,12 +65,16 @@ const config = {
 - [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 - [Relative Link](subdir/b.md)
 - [Parent Page](README.md)
+- [ACTUAL Parent Page](../README.md)
+- [shoop](shoop)
 ```
 Output ⬇️
 
 - [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 - [Relative Link](subdir/b.md)
 - [Parent Page](README.md)
+- [ACTUAL Parent Page](../README.md)
+- [shoop](shoop)
 
 ## Blockquotes
 ```markdown
