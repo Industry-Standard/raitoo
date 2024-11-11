@@ -62,17 +62,25 @@ const config = {
 
 ## Links
 ```markdown
-- [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-- [Relative Link](subdir/b.md)
-- [Parent Page](README.md)
+- [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- [Absolute Local Server Link](/)
+- [Absolute Local Server Link 2](/docs/subdir/subsubdir/c.md)
+- [Absolute Local Media Link](/docs/media/garbage-fire.jpg)
+- [Relative Local Server Link](subdir/b.md)
+- [Relative Local Media Link](../docs/media/garbage-fire.jpg)
+- [Current Directory Index Page](README.md)
 - [ACTUAL Parent Page](../README.md)
 - [shoop](shoop)
 ```
 Output ⬇️
 
-- [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-- [Relative Link](subdir/b.md)
-- [Parent Page](README.md)
+- [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- [Absolute Local Server Link](/)
+- [Absolute Local Server Link 2](/docs/subdir/subsubdir/c.md)
+- [Absolute Local Media Link](/docs/media/garbage-fire.jpg)
+- [Relative Local Server Link](subdir/b.md)
+- [Relative Local Media Link](../docs/media/garbage-fire.jpg)
+- [Current Directory Index Page](README.md)
 - [ACTUAL Parent Page](../README.md)
 - [shoop](shoop)
 

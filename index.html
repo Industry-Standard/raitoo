@@ -22,7 +22,7 @@
 <script>
 	const config = {
 		sitePath: "/",
-		browserRouter: false,
+		browserRouter: true,
 		name: "Raito",
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
 		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
@@ -467,7 +467,12 @@
 
 
 	const cleanPath = (path) => {
+		// remove .md from end of path if it exists
+		// i.e. https://something.com/bones.md > https://something.com/bones
 		if (path.slice(-3) == ".md") path = path.slice(0, -3);
+
+		// change any references to README with the base directory instead, i.e.
+		// i.e. https://something.com/README > https://something.com/
 		if (path.endsWith("README")) path = path.slice(0, -6);
 		return path;
 	};
@@ -476,13 +481,22 @@
 		try {
 			// Clean URL
 			let path;
+			// get current directory 'location' on the server
 			path = window.location.pathname + window.location.hash;
+			// change root links to server root, e.g [go here](/docs/README.md) > [go here](<https://config.site.path>/docs/README.md)
 			if (!config.browserRouter && path == "/") path = config.sitePath;
+			// get current working directory (deepest folder of current location)
 			cwd = path.substr(0, path.lastIndexOf("/")) + "/";
+
+			// if cwd is part of the site, cut sitepath out
 			if (cwd.startsWith(config.sitePath)) cwd = cwd.slice(config.sitePath.length);
+			// if path is part of the site, cut sitepath out
 			if (path.startsWith(config.sitePath)) path = path.slice(config.sitePath.length);
 			path = cleanPath(path);
+			console.log("path post fixes: ", path, " and current directory: ", cwd);
+			// handle 'in document' anchor links, e.g. https://mysite.com/README.md#toc
 			const selector = path.indexOf("#") == -1 ? null : path.substr(path.lastIndexOf("#") + 1);
+			
 			// Load Markdown
 			contentDiv.innerHTML = "";
 			contentDiv.innerHTML = (await renderMD(path)) || "";
@@ -494,6 +508,7 @@
 				checkbox.parentElement.parentElement.classList.add("checklist");
 			});
 			if (config.browserRouter)
+				// add a new event handler for all links
 				document.querySelectorAll("a").forEach((a) => {
 					const href = a.getAttribute("href");
 					if (!/^[a-z]*:\/\/*\b/.test(href))
