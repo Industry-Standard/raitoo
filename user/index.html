@@ -6,6 +6,7 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="icon" href="docs/logo.svg">
+	<link rel="stylesheet" href="./style.css">
 </head>
 
 
@@ -20,300 +21,17 @@
 
 <!-- USER CONFIG -->
 <script>
-	const config = {
+	config = {
 		sitePath: "/",
 		browserRouter: false,
-		name: "Raito",
+		name: "Raitoo",
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
-		serveDirectories: true, //allows navigation via markdown links to raw directories on your webserver
 		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
 		fileExtension: ".md", //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
-		components: ["docs/navbar", "docs/github"],
-		footers: ["docs/footer"],
+		components: [],//["docs/navbar", "docs/github"],
+		footers: [] //"docs/footer"],
 	};
 </script>
-
-<style>
-	* {
-		scroll-margin-top: 5rem;
-	}
-
-	#docs-github p {
-		margin: 0;
-	}
-
-	#docs-navbar {
-		width: 100%;
-		background-color: var(--color-1);
-		color: white;
-		margin: 0;
-		position: fixed;
-		box-shadow: 0px 0px 16px #00000047;
-		padding-left: 2rem;
-		z-index: 5;
-	}
-
-	#docs-navbar>ul>li>a>img {
-		border-radius: var(--border-radius);
-		margin: -1em 0;
-		vertical-align: super;
-		margin-right: 0.5em;
-		max-height: 2em;
-		width: 2rem;
-	}
-
-	#docs-navbar ul {
-		display: flex;
-		gap: 1rem;
-		list-style: none;
-		margin: 0;
-		border-radius: inherit;
-		background: inherit;
-		border: none;
-	}
-
-	#docs-navbar li {
-		margin: 1.4rem 0rem;
-		padding: inherit;
-		border: none;
-	}
-
-	#docs-navbar li::before {
-		content: none;
-	}
-
-	#docs-navbar a {
-		text-decoration: none;
-		padding: 0.9em 1.1em;
-		color: white;
-		font-weight: bold;
-	}
-
-	#docs-navbar a:hover {
-		background-color: #ffffff14;
-		border-radius: var(--border-radius);
-	}
-
-	#docs-footer {
-		text-align: center;
-		background-color: var(--color-1);
-		color: white;
-		padding: 1rem;
-	}
-
-	#docs-footer a {
-		color: white;
-		text-decoration: underline;
-	}
-
-	:root {
-		--text-color: #313f47;
-		--border-color: #dddddd;
-		--background-color: white;
-		--darker-background-color: #0000000a;
-		--lighter-background-color: #fcfcfc;
-		--color-1: #4285f4;
-		--color-2: #db4437;
-		--color-3: #f4b400;
-		--color-4: #0f9d58;
-		--border-radius: 7px;
-	}
-
-	[data-theme="dark"] {
-		--text-color: #adbac7;
-		--border-color: #373e47;
-		--background-color: #22272e;
-		--darker-background-color: rgba(99, 110, 123, 0.4);
-		--lighter-background-color: rgba(99, 110, 123, 0.1);
-	}
-
-	body {
-		color: var(--text-color);
-		font-family: "Open Sans", Helvetica, sans-serif;
-		margin: 0;
-		padding: 0;
-		background-color: var(--background-color);
-		opacity: 0;
-		transition: opacity 0.3s;
-	}
-
-	body.loaded {
-		opacity: 1;
-	}
-
-	h1,
-	h2,
-	h3,
-	h4,
-	h5 {
-		padding-bottom: 0.3em;
-	}
-
-	h1,
-	h2 {
-		border-bottom: 1px solid var(--border-color);
-	}
-
-	a {
-		text-decoration: none;
-		color: var(--color-1);
-	}
-
-	blockquote a {
-		color: #92d3ff;
-	}
-
-	a:hover {
-		text-decoration: underline;
-	}
-
-	hr {
-		border: none;
-		border-bottom: 1px solid var(--border-color);
-	}
-
-	img {
-		max-height: 20em;
-		border-radius: var(--border-radius);
-	}
-
-	#content {
-		max-width: 50rem;
-		padding: 5rem 1rem;
-		margin: auto;
-		padding-top: 5em;
-	}
-
-	:not(pre)>code {
-		background: var(--darker-background-color);
-		border-radius: var(--border-radius);
-		padding: 0.2em 0.4em;
-	}
-
-	pre {
-		background: var(--darker-background-color);
-		padding: 1.6em !important;
-		overflow: auto;
-		padding: calc(0.75em);
-		margin-bottom: 1em;
-		border-radius: var(--border-radius);
-	}
-
-	blockquote {
-		margin: 0;
-		padding: 1em 2em !important;
-		background: #4285f4;
-		color: white;
-		overflow: auto;
-		border-radius: var(--border-radius);
-	}
-
-	table {
-		border-collapse: collapse;
-		margin: 2em 0;
-		font-size: 0.9em;
-		font-family: sans-serif;
-		min-width: 20em;
-		border-radius: var(--border-radius);
-		overflow: auto;
-		display: block;
-	}
-
-	table thead tr {
-		background-color: var(--color-1);
-		color: #ffffff;
-		text-align: left;
-	}
-
-	table th,
-	table td {
-		padding: 0.8em 1.2em;
-	}
-
-	table tbody tr:nth-of-type(odd) {
-		background-color: var(--darker-background-color);
-	}
-
-	table tbody tr:nth-of-type(even) {
-		background-color: var(--lighter-background-color);
-	}
-
-	table tbody tr.active-row {
-		font-weight: bold;
-		color: var(--color-1);
-	}
-
-	ul {
-		padding-inline-start: 0;
-		list-style: none;
-		background-color: var(--lighter-background-color);
-		border-radius: var(--border-radius);
-		border: 1px solid var(--darker-background-color);
-		padding: 0;
-	}
-
-	li {
-		padding: 0.9em;
-		border-bottom: 1px solid var(--darker-background-color);
-	}
-
-	li:last-of-type {
-		border: none;
-	}
-
-	ul ul {
-		border: none;
-		margin: 1em -0.9em -0.9em -0.9em;
-		border-top: 1px solid var(--darker-background-color);
-		border-radius: 0;
-	}
-
-	ul ul li {
-		padding-left: 4em;
-	}
-
-	ul:not(.checklist) li::before {
-		content: "-";
-		margin-right: 0.7em;
-		color: var(--border-color);
-	}
-
-	.checklist input[type="checkbox"] {
-		pointer-events: none;
-		margin-right: 1em;
-		height: 1.2em;
-		width: 1.2em;
-		vertical-align: top;
-
-		appearance: none;
-		background: var(--darker-background-color);
-		border-radius: 2px;
-	}
-
-	.checklist input[type="checkbox"]:checked {
-		appearance: auto;
-		background: inherit;
-	}
-
-	button,
-	.button {
-		padding: 1rem 2em;
-		background: #4285f4;
-		color: white;
-		overflow: auto;
-		border-radius: var(--border-radius);
-		border: none;
-		transition: opacity 0.3s;
-		cursor: pointer;
-	}
-
-	button:hover,
-	.button:hover {
-		text-decoration: none;
-		opacity: 0.9;
-	}
-</style>
-
 <body>
 	<div id="components"></div>
 	<div id="content"></div>
@@ -332,15 +50,15 @@
 		markedProps.highlight = (code) => hljs.highlightAuto(code).value;
 
 	let cwd = "";
-	config.contentPath = config.sitePath;
 	const contentDiv = document.getElementById("content");
 	const footersDiv = document.getElementById("footer");
 	const componentsDiv = document.getElementById("components");
 	if (!config.browserRouter) config.sitePath = config.sitePath + "#/";
+	config.contentPath = config.sitePath;
 
 
 	function fixLocalPath(path, skipRebase) {
-		console.log("in\t",config.sitePath, cwd, path, skipRebase);
+		console.log("fixLocalPath in\tsitePath:",config.sitePath, cwd, path, skipRebase);
 		if(path.startsWith("/")) {
 			if (skipRebase && !config.browserRouter) {
 				path = cleanPath(path.slice(1));
@@ -369,7 +87,7 @@
 			}, [])
 			.join("/");
 		if (path == "") path = "/";
-		console.log("out\t",config.sitePath, cwd, path, skipRebase);
+		console.log("fixLocalPath out\tsitePath:",config.sitePath, cwd, path, skipRebase);
 		return path;
 	}
 
@@ -426,8 +144,7 @@
 			if (path.slice(-1) == "/") { 
 				path = window.location.host+path;
 			} 
-			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});	
-			if (res.text.startsWith("<!doctype html>") && !config.serveDirectories) return false;	
+			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});		
 			return res.status == 200
 		} catch(ex) {
 			console.log('resource check exception: ' + ex);
@@ -532,9 +249,9 @@
 	};
 
 	window.onload = async () => {
-		await Promise.all((config.components || []).map((component) => loadComponent(component, document.getElementById("components"))));
+		await Promise.all((config.components || []).map((component) => loadComponent(component, componentsDiv)));
 		await loadContent();
-		await Promise.all((config.footers || []).map((footer) => loadComponent(footer, document.getElementById("footer"))));
+		await Promise.all((config.footers || []).map((footer) => loadComponent(footer, footersDiv)));
 	};
 	window.onhashchange = loadContent;
 	if (config.browserRouter) window.onpopstate = loadContent;

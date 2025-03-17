@@ -65,24 +65,24 @@ const config = {
 - [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 - [Absolute Local Server Link](/)
 - [Absolute Local Server Link 2](/docs/subdir/subsubdir/c.md)
-- [Absolute Local Media Link](/docs/media/garbage-fire.jpg)
+- [Absolute Local Media Link](/docs/media/garbage-fire.jpg) 
 - [Relative Local Server Link](subdir/b.md)
-- [Relative Local Media Link](../docs/media/garbage-fire.jpg)
+- [Relative Local Media Link](../docs/media/garbage-fire.jpg) 
 - [Current Directory Index Page](README.md)
 - [ACTUAL Parent Page](../README.md)
 - [shoop](shoop)
 ```
 Output ⬇️
 
-- [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-- [Absolute Local Server Link](/)
-- [Absolute Local Server Link 2](/docs/subdir/subsubdir/c.md)
-- [Absolute Local Media Link](/docs/media/garbage-fire.jpg)
-- [Relative Local Server Link](subdir/b.md)
-- [Relative Local Media Link](../docs/media/garbage-fire.jpg)
-- [Current Directory Index Page](README.md)
-- [ACTUAL Parent Page](../README.md)
-- [shoop](shoop)
+- ✅[Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- ✅[Absolute Local Server Link](/)
+- ✅[Absolute Local Server Link 2](/docs/subdir/subsubdir/c.md)
+- [Absolute Local Media Link](/docs/media/garbage-fire.jpg) _has issues_ back button navigation from here fails, possible redirect issue?
+- ✅[Relative Local Server Link](subdir/b.md)
+- [Relative Local Media Link](../docs/media/garbage-fire.jpg) _same as above_, back navigation fail
+- ✅[Current Directory Index Page](README.md)
+- ✅[ACTUAL Parent Page](../README.md)
+- ✅[shoop](shoop)
 
 ## Blockquotes
 ```markdown
