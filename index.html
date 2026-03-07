@@ -21,11 +21,11 @@
 <!-- USER CONFIG -->
 <script>
 	const config = {
-		sitePath: "/",
-		browserRouter: false,
-		name: "Raito",
+		sitePath: "/",     // allows to have some prepended text if you are running in the middle of a directory structure
+		browserRouter: true, //prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		name: "Raito", // name is put into page title (what shows up in the tab)
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
-		serveDirectories: true, //allows navigation via markdown links to raw directories on your webserver
+		serveDirectories: false, //allows navigation via markdown links to raw directories on your webserver
 		directoryIndex: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
 		fileExtension: ".md", //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
 		components: ["docs/navbar", "docs/github"],
@@ -427,7 +427,8 @@
 				path = window.location.host+path;
 			} 
 			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});	
-			if (res.text.startsWith("<!doctype html>") && !config.serveDirectories) return false;	
+			reqBody = await res.text();
+			if (reqBody.startsWith("<!doctype html>") && !config.serveDirectories) return false;	
 			return res.status == 200
 		} catch(ex) {
 			console.log('resource check exception: ' + ex);
@@ -466,15 +467,11 @@
 		destDiv.prepend(div);
 	};
 
-
-
 	const cleanPath = (path) => {
-		// remove .md from end of path if it exists
-		// i.e. https://something.com/bones.md > https://something.com/bones
+		// remove .md from end of path if it exists, i.e. https://something.com/bones.md > https://something.com/bones
 		if (path.slice(-3) == ".md") path = path.slice(0, -3);
 
-		// change any references to README with the base directory instead, i.e.
-		// i.e. https://something.com/README > https://something.com/
+		// change any references to README with the base directory instead, i.e. https://something.com/README > https://something.com/
 		if (path.endsWith("README")) path = path.slice(0, -6);
 		return path;
 	};
