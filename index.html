@@ -22,7 +22,7 @@
 <script>
 	const config = {
 		sitePath: "/",     // allows to have some prepended text if you are running in the middle of a directory structure
-		browserRouter: true, //prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		browserRouter: false, //prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
 		name: "Raito", // name is put into page title (what shows up in the tab)
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
 		serveDirectories: false, //allows navigation via markdown links to raw directories on your webserver
@@ -340,14 +340,16 @@
 
 
 	function fixLocalPath(path, skipRebase) {
-		console.log("in\t",config.sitePath, cwd, path, skipRebase);
-		if(path.startsWith("/")) {
+		console.log('--- fixLocalPath, sitePath:', config.sitePath, "skipRebase:", skipRebase);
+		console.log("in\t", "cwd:", cwd, "path:", path);
+		tmpPath = path;
+		if(path.startsWith("/")) { // absolute server paths do not care about current working directory
 			if (skipRebase && !config.browserRouter) {
 				path = cleanPath(path.slice(1));
 			} else {
 				path = cleanPath(config.sitePath + path.slice(1));
 			}
-		} else {
+		} else { //relative server paths are with respect to the current directory
 			if (skipRebase &&  !config.browserRouter) {
 				path = cleanPath(cwd + path);
 			} else {
@@ -356,7 +358,10 @@
 		}
 
 		// posible alternative to path resolution below; needs further testing
-		newHref = (""+new URL(path, "http://example.com").href).slice("http://example.com".length);
+		fullUrl = new URL(path, window.location.origin);
+		//console.log(fullUrl);
+		console.log("url type normalization:", fullUrl.href, fullUrl.hash);
+		urlTypePath = fullUrl.href.slice(window.location.origin.length);
 
 		// Resolve paths
 		path = path
@@ -369,8 +374,10 @@
 			}, [])
 			.join("/");
 		if (path == "") path = "/";
-		console.log("out\t",config.sitePath, cwd, path, skipRebase);
-		return path;
+		console.log("out\t", "cwd:", cwd, "path:", path);
+		
+		return urlTypePath;
+		//return path;
 	}
 
 	// Rewrite relative URLs
@@ -420,9 +427,7 @@
 		//https://stackoverflow.com/questions/1979915/can-i-check-if-a-file-exists-at-a-url
 		try {
 			console.log('checking ' + path);
-			console.log(path.slice(3));
-			console.log(path.slice(6));
-			if (path.slice(-3) == ".md" || path.slice(-6) == "README") return false;
+			if (path.slice(-1*config.fileExtension.length) == config.fileExtension || path.slice(-1*config.directoryIndex.length) == config.directoryIndex) return false;
 			if (path.slice(-1) == "/") { 
 				path = window.location.host+path;
 			} 
@@ -438,7 +443,7 @@
 
 	const renderMD = async (path) => {
 		if (path.indexOf("#") != -1) path = path.substr(0, path.lastIndexOf("#"));
-		if (path.slice(-1) == "/" || path == "") path += "README";
+		if (path.slice(-1) == "/" || path == "") path += config.directoryIndex;
 
 		// check if resource exists as is - without MD
 		if (config.serveLocalNonMdContent) {
@@ -451,7 +456,7 @@
 			}
 		}
 		// resource doesn't exist, fetch the markdown
-		const res = await fetch(`${config.contentPath}${path}.md`);
+		const res = await fetch(`${config.contentPath}${path}${config.fileExtension}`);
 		if (res.status != 200) throw Error();
 		const markdown = await res.text();
 		if (markdown.startsWith("<!doctype html>")) throw Error();
@@ -469,10 +474,10 @@
 
 	const cleanPath = (path) => {
 		// remove .md from end of path if it exists, i.e. https://something.com/bones.md > https://something.com/bones
-		if (path.slice(-3) == ".md") path = path.slice(0, -3);
+		if (path.slice(-1*config.fileExtension.length) == config.fileExtension) path = path.slice(0, -3);
 
 		// change any references to README with the base directory instead, i.e. https://something.com/README > https://something.com/
-		if (path.endsWith("README")) path = path.slice(0, -6);
+		if (path.endsWith(config.directoryIndex)) path = path.slice(0, -1*config.directoryIndex.length);
 		return path;
 	};
 
