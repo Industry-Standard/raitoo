@@ -22,7 +22,8 @@
 <script>
 	const config = {
 		sitePath: "/",     // allows to have some prepended text if you are running in the middle of a directory structure
-		browserRouter: false, //prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		browserRouter: true, // if false, prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		                      // if true, url directory structure appears normal, e.g. localhost:9001/stuff would be a redirect to /stuff/README.md
 		name: "Raito", // name is put into page title (what shows up in the tab)
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
 		serveDirectories: false, //allows navigation via markdown links to raw directories on your webserver
@@ -336,47 +337,49 @@
 	const contentDiv = document.getElementById("content");
 	const footersDiv = document.getElementById("footer");
 	const componentsDiv = document.getElementById("components");
+
+	const pathIsAbsolute = (path) => /^([a-z]+:)?\/\//i.test(path);
+	const pathIsRootRelative = (path) => path.startsWith('/');
+
+	// relative and absolute pathing don't really work because of this; I think we add it in later when we fix links
 	if (!config.browserRouter) config.sitePath = config.sitePath + "#/";
 
 
 	function fixLocalPath(path, skipRebase) {
 		console.log('--- fixLocalPath, sitePath:', config.sitePath, "skipRebase:", skipRebase);
-		console.log("in\t", "cwd:", cwd, "path:", path);
-		tmpPath = path;
-		if(path.startsWith("/")) { // absolute server paths do not care about current working directory
+		console.log("   in\t", "cwd:", cwd, "path:", path);
+		fixedPath = path
+
+		if(pathIsRootRelative(fixedPath)) { //path is absolute and does NOT need current directory 
 			if (skipRebase && !config.browserRouter) {
-				path = cleanPath(path.slice(1));
+				fixedPath = cleanPath(fixedPath.slice(1));
 			} else {
-				path = cleanPath(config.sitePath + path.slice(1));
+				fixedPath = cleanPath(config.sitePath + fixedPath.slice(1));
 			}
 		} else { //relative server paths are with respect to the current directory
 			if (skipRebase &&  !config.browserRouter) {
-				path = cleanPath(cwd + path);
+				fixedPath = cleanPath(cwd + fixedPath);
 			} else {
-				path = cleanPath(config.sitePath + cwd + path);
+				fixedPath = cleanPath(config.sitePath + cwd + fixedPath);
 			}
 		}
 
 		// posible alternative to path resolution below; needs further testing
-		fullUrl = new URL(path, window.location.origin);
-		//console.log(fullUrl);
-		console.log("url type normalization:", fullUrl.href, fullUrl.hash);
-		urlTypePath = fullUrl.href.slice(window.location.origin.length);
+		// intent is to nromalize things like ./something or path/../path2 in urls
+		if(!skipRebase && !config.browserRouter) {
+			// path normalization doesn't work with host:port/#/
+			browRouUrl = new URL(fixedPath.slice(2), window.location.origin); //take out the /#
+			fixedPath = config.sitePath.slice(0,-1) + browRouUrl.pathname;
+		} else {
+			fullUrl = new URL(fixedPath, window.location.origin);
 
-		// Resolve paths
-		path = path
-			.split("/")
-			.reduce((a, v) => {
-				if (v === ".");
-				else if (v === "..") a.pop();
-				else a.push(v);
-				return a;
-			}, [])
-			.join("/");
-		if (path == "") path = "/";
-		console.log("out\t", "cwd:", cwd, "path:", path);
+			//console.log("url type normalization:", fullUrl.href, fullUrl.hash, window.location.origin);
+			fixedPath = fullUrl.href.slice(window.location.origin.length);			
+		}
+
+		console.log("   out\t", "cwd:", cwd, "fixedPath:", fixedPath);
 		
-		return urlTypePath;
+		return fixedPath;
 		//return path;
 	}
 
