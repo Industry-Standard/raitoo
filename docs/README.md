@@ -13,17 +13,6 @@ Root paths redirect to `README.md`.
 └── index.html
 ```
 
-## Images
-
-```
-![garbage fire](media/garbage-fire.jpg)
-```
-
-![garbage fire](media/garbage-fire.jpg)
-
-
-
-
 ## Browser Router
 Recommended to improve SEO and user experience.
 
