@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-
+	
 <head>
 	<meta charset="UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -369,8 +369,13 @@
 		async: true,
 		async walkTokens(token) {
 			if (token.type === 'include') {
+				url = token.url
 				token.url = cwd + cleanPath(token.url)
-				token.html = await renderMD(token.url)
+				try{
+					token.html = await renderMD(token.url)
+				} catch (err) {
+					token.html = `<span class="include-error"><em>Warning!</em> Resource ${url} not found!</span>`;
+				}
 			}
 		}
 	});
