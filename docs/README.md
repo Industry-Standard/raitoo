@@ -51,15 +51,19 @@ const config = {
 
 ## Links
 ```markdown
-- [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-- [Relative Link](subdir/b.md)
-- [Parent Page](README.md)
+- [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- [Root Relative Link](/docs/subdir/a.md)
+- [Directory Relative Link](./subdir/subsubdir/c.md)
+- [Indexing Directory Relative Link](./subdir/a)
+- [Indexing Root Relative Link](/docs/)
 ```
 Output ⬇️
 
-- [Absolute Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
-- [Relative Link](subdir/b.md)
-- [Parent Page](README.md)
+- [Absolute External Link](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+- [Root Relative Link](/docs/subdir/a.md)
+- [Directory Relative Link](./subdir/subsubdir/c.md)
+- [Indexing Directory Relative Link](./subdir/a)
+- [Indexing Root Relative Link](/docs/)
 
 ## Blockquotes
 ```markdown

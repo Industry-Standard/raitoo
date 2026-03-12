@@ -8,14 +8,29 @@
 	<link rel="icon" href="docs/logo.svg">
 </head>
 
+
+<!-- Marked.js - Markdown renderer -->
+<script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
+
+<!-- OPTIONAL : Highlight.js - Syntax Highlighting -->
+<!--
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/base16/solarized-dark.min.css">
+-->
+
 <!-- USER CONFIG -->
 <script>
 	const config = {
-		sitePath: "/",
-		browserRouter: false,
-		name: "Raito",
+		sitePath: "/",     // allows to have some prepended text if you are running in the middle of a directory structure
+		browserRouter: false, // if false, prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		                      // if true, url directory structure appears normal, e.g. localhost:9001/stuff would be a redirect to /stuff/README.md
+		name: "Raito", // name is put into page title (what shows up in the tab)
 		components: ["docs/navbar", "docs/github"],
 		footers: ["docs/footer"],
+		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
+		serveDirectories: false, //allows navigation via markdown links to raw directories on your webserver
+		indexFilename: "README", //file for slash ending directories (e.g. https://host/dir/ -> https://host/dir/README.md)
+		indexExtension: ".md" //extension for naked directories (e.g /dirs/about -> /dirs/about.md)
 	};
 </script>
 
@@ -91,18 +106,7 @@
 		color: white;
 		text-decoration: underline;
 	}
-</style>
 
-<!-- Marked.js - Markdown renderer -->
-<script src="https://cdn.jsdelivr.net/npm/marked@5.1.1/marked.min.js"></script>
-
-<!-- OPTIONAL : Highlight.js - Syntax Highlighting -->
-<!--
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/base16/solarized-dark.min.css">
--->
-
-<style>
 	:root {
 		--text-color: #313f47;
 		--border-color: #dddddd;
@@ -316,7 +320,14 @@
 	<div id="content"></div>
 	<div id="footer"></div>
 </body>
+
 <script>
+	/* in general, raito does a few BIG things:
+		- provide a stub index.html that fetches markdown files and embeds them into the html body of index.html
+		- modifies the event handler for <a href> tags to capture the request and render markdown to the window
+		- rewrites url paths (cleanPath) on local servers to work with a pseudo local directory
+	*/
+
 	const markedProps = {};
 	if (typeof hljs !== "undefined")
 		markedProps.highlight = (code) => hljs.highlightAuto(code).value;
@@ -326,25 +337,51 @@
 	const contentDiv = document.getElementById("content");
 	const footersDiv = document.getElementById("footer");
 	const componentsDiv = document.getElementById("components");
+
+
 	if (!config.browserRouter) config.sitePath = config.sitePath + "#/";
+
+	const pathIsAbsolute = (path) => /^([a-z]+:)?\/\//i.test(path);
+	const pathIsRootRelative = (path) => path.startsWith('/');
+	const pathIsMediaRequest = (path) => /\.(jpg|jpeg|png|gif|webp|svg|mp4|webm|ogv|mp3|wav|ogg)$/i.test(path);
+
+	function fixLocalPath(path, skipRebase) {
+		if(pathIsRootRelative(path)) { //path is absolute and does NOT need current directory 
+			if (skipRebase && !config.browserRouter) { //skip rebase usually means the link is a media link and doesn't need to be adjusted
+				path = cleanPath(path.slice(1));
+			} else {
+				path = cleanPath(config.sitePath + path.slice(1));
+			}
+		} else { //relative server paths are with respect to the current directory
+			if (skipRebase &&  !config.browserRouter) {
+				path = cleanPath(cwd + path);
+			} else {
+				path = cleanPath(config.sitePath + cwd + path);
+			}
+		}
+
+		// posible alternative to path resolution below; needs further testing
+		// intent is to nromalize things like ./something or path/../path2 in urls
+		if(!skipRebase && !config.browserRouter) {
+			// path normalization doesn't work with host:port/#/
+			browRouUrl = new URL(path.slice(2), window.location.origin); //take out the /#
+			path = config.sitePath.slice(0,-1) + browRouUrl.pathname; //put the /# back in
+		} else {
+			fullUrl = new URL(path, window.location.origin);
+			path = fullUrl.href.slice(window.location.origin.length);			
+		}
+	
+		return path;
+	}
 
 	// Rewrite relative URLs
 	marked.use({
 		walkTokens: (token) => {
 			if ("link" == token.type && !/^[a-z]*:\/\/*\b/.test(token.href)) {
-				token.href = cleanPath(config.sitePath + cwd + token.href);
-
-				// Resolve paths
-				token.href = token.href
-					.split("/")
-					.reduce((a, v) => {
-						if (v === ".");
-						else if (v === "..") a.pop();
-						else a.push(v);
-						return a;
-					}, [])
-					.join("/");
-				if (token.href == "") token.href = "/";
+				token.href = fixLocalPath(token.href, skipRebase = false);
+			} else if ("link" != token.type && token.href && !/^[a-z]*:\/\/*\b/.test(token.href)) {
+				// is an html tag with a src / href that is not a link (usually an img tag)
+				token.href = fixLocalPath(token.href, skipRebase = true);
 			}
 		},
 	});
@@ -380,42 +417,79 @@
 		}
 	});
 
+	const checkLocalResourceExists = async (path) => {
+		try {
+			if (path.slice(-1*config.indexExtension.length) == config.indexExtension || path.slice(-1*config.indexFilename.length) == config.indexFilename) return false;
+			if (path.slice(-1) == "/") { 
+				path = window.location.host+path;
+			} 
+			const res = await fetch(`${config.contentPath}${path}`, {method: "HEAD"});	
+			reqBody = await res.text();
+			if (reqBody.startsWith("<!doctype html>") && !config.serveDirectories) return false;	
+			return res.status == 200
+		} catch(ex) {
+			console.log('resource check exception: ' + ex);
+		}
+		return false;
+	}
+
 	const renderMD = async (path) => {
 		if (path.indexOf("#") != -1) path = path.substr(0, path.lastIndexOf("#"));
-		if (path.slice(-1) == "/" || path == "") path += "README";
-		const res = await fetch(`${config.contentPath}${path}.md`);
-		if (res.status != 200) throw Error();
+		if (path.slice(-1) == "/" || path == "") path += config.indexFilename;
+
+		// check if resource exists as is - without MD
+		if (config.serveLocalNonMdContent && pathIsMediaRequest(path)) {
+			if (await checkLocalResourceExists(path)) {
+				console.log('found true! on '+path);
+				window.location.replace(`${config.contentPath}${path}`);
+				return;
+			}
+		}
+		// resource doesn't exist, fetch the markdown
+		const res = await fetch(`${config.contentPath}${path}${config.indexExtension}`);
+		if (res.status != 200) throw Error(`${config.contentPath}${path}${config.indexExtension} not found on host`);
 		const markdown = await res.text();
 		if (markdown.startsWith("<!doctype html>")) throw Error();
 		return marked.parse(markdown, markedProps);
 	};
 
-	const loadComponent = async (element) => {
+	const loadComponent = async (element, destDiv) => {
 		const html = await renderMD(element);
 		if (!html) return;
 		let div = document.createElement("div");
 		div.innerHTML = html;
 		div.id = element.replaceAll("/", "-");
-		componentsDiv.prepend(div);
+		destDiv.prepend(div);
 	};
 
 	const cleanPath = (path) => {
-		if (path.slice(-3) == ".md") path = path.slice(0, -3);
-		if (path.endsWith("README")) path = path.slice(0, -6);
+		// remove .md from end of path if it exists, i.e. https://something.com/bones.md > https://something.com/bones
+		if (path.slice(-1*config.indexExtension.length) == config.indexExtension) path = path.slice(0, -3);
+
+		// change any references to README with the base directory instead, i.e. https://something.com/README > https://something.com/
+		if (path.endsWith(config.indexFilename)) path = path.slice(0, -1*config.indexFilename.length);
 		return path;
 	};
 
 	const loadContent = async () => {
 		try {
-			// Clean URL
 			let path;
+			// get current directory 'location' on the server
 			path = window.location.pathname + window.location.hash;
+			// change root links to server root, e.g [go here](/docs/README.md) > [go here](<https://config.site.path>/docs/README.md)
 			if (!config.browserRouter && path == "/") path = config.sitePath;
+			// get current working directory (deepest folder of current location)
 			cwd = path.substr(0, path.lastIndexOf("/")) + "/";
+
+			// if cwd is part of the site, cut sitepath out
 			if (cwd.startsWith(config.sitePath)) cwd = cwd.slice(config.sitePath.length);
+			// if path is part of the site, cut sitepath out
 			if (path.startsWith(config.sitePath)) path = path.slice(config.sitePath.length);
 			path = cleanPath(path);
+			console.log("path post fixes: ", path, " and current directory: ", cwd);
+			// handle 'in document' anchor links, e.g. https://mysite.com/README.md#toc
 			const selector = path.indexOf("#") == -1 ? null : path.substr(path.lastIndexOf("#") + 1);
+			
 			// Load Markdown
 			contentDiv.innerHTML = "";
 			contentDiv.innerHTML = (await renderMD(path)) || "";
@@ -427,6 +501,7 @@
 				checkbox.parentElement.parentElement.classList.add("checklist");
 			});
 			if (config.browserRouter)
+				// add a new event handler for all links
 				document.querySelectorAll("a").forEach((a) => {
 					const href = a.getAttribute("href");
 					if (!/^[a-z]*:\/\/*\b/.test(href))
@@ -442,24 +517,16 @@
 			if (!config.browserRouter) window.location.replace(config.sitePath + path);
 		} catch (err) {
 			if ((config.browserRouter && window.location.pathname != config.sitePath) || (!config.browserRouter && window.location.hash != config.sitePath)) {
+				alert(err);
 				location.replace(config.sitePath);
 			}
 		}
 	};
 
-	const loadFooter = async (element) => {
-		const html = await renderMD(element);
-		if (!html) return;
-		let div = document.createElement("div");
-		div.innerHTML = html;
-		div.id = element.replaceAll("/", "-");
-		footersDiv.prepend(div);
-	};
-
 	window.onload = async () => {
-		await Promise.all((config.components || []).map((component) => loadComponent(component)));
+		await Promise.all((config.components || []).map((component) => loadComponent(component, document.getElementById("components"))));
 		await loadContent();
-		await Promise.all((config.footers || []).map((footer) => loadFooter(footer)));
+		await Promise.all((config.footers || []).map((footer) => loadComponent(footer, document.getElementById("footer"))));
 	};
 	window.onhashchange = loadContent;
 	if (config.browserRouter) window.onpopstate = loadContent;
