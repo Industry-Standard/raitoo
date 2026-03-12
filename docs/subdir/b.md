@@ -2,6 +2,8 @@
 
 Link to [a](a.md)
 
+Link to [shoop](../shoop)
+
 Link to [docs](..) (..)
 
 Link to [docs](../) (../)

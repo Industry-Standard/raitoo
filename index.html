@@ -22,7 +22,7 @@
 <script>
 	const config = {
 		sitePath: "/",     // allows to have some prepended text if you are running in the middle of a directory structure
-		browserRouter: true, // if false, prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
+		browserRouter: false, // if false, prepend local url references with #, e.g. localhost:9001/#/stuff would be a redirect to /stuff/README.md
 		                      // if true, url directory structure appears normal, e.g. localhost:9001/stuff would be a redirect to /stuff/README.md
 		name: "Raito", // name is put into page title (what shows up in the tab)
 		serveLocalNonMdContent: true, //serve images / files that are not markdown as if they were static files
@@ -324,7 +324,7 @@
 <script>
 	/* in general, raito does a few BIG things:
 		- provide a stub index.html that fetches markdown files and embeds them into the html body of index.html
-		- modifies the event handler for <a href> tags 
+		- modifies the event handler for <a href> tags to capture the request and render markdown to the window
 		- rewrites url paths (cleanPath) on local servers to work with a pseudo local directory
 	*/
 
@@ -338,29 +338,25 @@
 	const footersDiv = document.getElementById("footer");
 	const componentsDiv = document.getElementById("components");
 
-	const pathIsAbsolute = (path) => /^([a-z]+:)?\/\//i.test(path);
-	const pathIsRootRelative = (path) => path.startsWith('/');
 
-	// relative and absolute pathing don't really work because of this; I think we add it in later when we fix links
 	if (!config.browserRouter) config.sitePath = config.sitePath + "#/";
 
+	const pathIsAbsolute = (path) => /^([a-z]+:)?\/\//i.test(path);
+	const pathIsRootRelative = (path) => path.startsWith('/');
+	const pathIsMediaRequest = (path) => /\.(jpg|jpeg|png|gif|webp|svg|mp4|webm|ogv|mp3|wav|ogg)$/i.test(path);
 
 	function fixLocalPath(path, skipRebase) {
-		console.log('--- fixLocalPath, sitePath:', config.sitePath, "skipRebase:", skipRebase);
-		console.log("   in\t", "cwd:", cwd, "path:", path);
-		fixedPath = path
-
-		if(pathIsRootRelative(fixedPath)) { //path is absolute and does NOT need current directory 
-			if (skipRebase && !config.browserRouter) {
-				fixedPath = cleanPath(fixedPath.slice(1));
+		if(pathIsRootRelative(path)) { //path is absolute and does NOT need current directory 
+			if (skipRebase && !config.browserRouter) { //skip rebase usually means the link is a media link and doesn't need to be adjusted
+				path = cleanPath(path.slice(1));
 			} else {
-				fixedPath = cleanPath(config.sitePath + fixedPath.slice(1));
+				path = cleanPath(config.sitePath + path.slice(1));
 			}
 		} else { //relative server paths are with respect to the current directory
 			if (skipRebase &&  !config.browserRouter) {
-				fixedPath = cleanPath(cwd + fixedPath);
+				path = cleanPath(cwd + path);
 			} else {
-				fixedPath = cleanPath(config.sitePath + cwd + fixedPath);
+				path = cleanPath(config.sitePath + cwd + path);
 			}
 		}
 
@@ -368,19 +364,14 @@
 		// intent is to nromalize things like ./something or path/../path2 in urls
 		if(!skipRebase && !config.browserRouter) {
 			// path normalization doesn't work with host:port/#/
-			browRouUrl = new URL(fixedPath.slice(2), window.location.origin); //take out the /#
-			fixedPath = config.sitePath.slice(0,-1) + browRouUrl.pathname;
+			browRouUrl = new URL(path.slice(2), window.location.origin); //take out the /#
+			path = config.sitePath.slice(0,-1) + browRouUrl.pathname; //put the /# back in
 		} else {
-			fullUrl = new URL(fixedPath, window.location.origin);
-
-			//console.log("url type normalization:", fullUrl.href, fullUrl.hash, window.location.origin);
-			fixedPath = fullUrl.href.slice(window.location.origin.length);			
+			fullUrl = new URL(path, window.location.origin);
+			path = fullUrl.href.slice(window.location.origin.length);			
 		}
-
-		console.log("   out\t", "cwd:", cwd, "fixedPath:", fixedPath);
-		
-		return fixedPath;
-		//return path;
+	
+		return path;
 	}
 
 	// Rewrite relative URLs
@@ -427,9 +418,7 @@
 	});
 
 	const checkLocalResourceExists = async (path) => {
-		//https://stackoverflow.com/questions/1979915/can-i-check-if-a-file-exists-at-a-url
 		try {
-			console.log('checking ' + path);
 			if (path.slice(-1*config.fileExtension.length) == config.fileExtension || path.slice(-1*config.directoryIndex.length) == config.directoryIndex) return false;
 			if (path.slice(-1) == "/") { 
 				path = window.location.host+path;
@@ -449,18 +438,16 @@
 		if (path.slice(-1) == "/" || path == "") path += config.directoryIndex;
 
 		// check if resource exists as is - without MD
-		if (config.serveLocalNonMdContent) {
+		if (config.serveLocalNonMdContent && pathIsMediaRequest(path)) {
 			if (await checkLocalResourceExists(path)) {
 				console.log('found true! on '+path);
 				window.location.replace(`${config.contentPath}${path}`);
 				return;
-				//https://stackoverflow.com/questions/503093/how-do-i-redirect-to-another-webpage
-				//https://stackoverflow.com/questions/1368264/how-to-extract-the-hostname-portion-of-a-url-in-javascript
 			}
 		}
 		// resource doesn't exist, fetch the markdown
 		const res = await fetch(`${config.contentPath}${path}${config.fileExtension}`);
-		if (res.status != 200) throw Error();
+		if (res.status != 200) throw Error(`${config.contentPath}${path}${config.fileExtension} not found on host`);
 		const markdown = await res.text();
 		if (markdown.startsWith("<!doctype html>")) throw Error();
 		return marked.parse(markdown, markedProps);
@@ -486,7 +473,6 @@
 
 	const loadContent = async () => {
 		try {
-			// Clean URL
 			let path;
 			// get current directory 'location' on the server
 			path = window.location.pathname + window.location.hash;
@@ -531,6 +517,7 @@
 			if (!config.browserRouter) window.location.replace(config.sitePath + path);
 		} catch (err) {
 			if ((config.browserRouter && window.location.pathname != config.sitePath) || (!config.browserRouter && window.location.hash != config.sitePath)) {
+				alert(err);
 				location.replace(config.sitePath);
 			}
 		}
